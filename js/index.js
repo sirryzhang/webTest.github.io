@@ -1,38 +1,32 @@
+'use strict';
+
 // Initial Setup
-const canvas = document.querySelector('canvas');
-const c = canvas.getContext('2d');
+var canvas = document.querySelector('canvas');
+var c = canvas.getContext('2d');
 
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
-
 // Variables
-let mouse = {
+var mouse = {
     x: innerWidth / 2,
     y: innerHeight / 2
 };
 
-const colors = [
-    '#2185C5',
-    '#7ECEFD',
-    '#FFF6E5',
-    '#FF7F66'
-];
-
+var colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66'];
 
 // Event Listeners
-addEventListener('mousemove', function(event) {
+addEventListener('mousemove', function (event) {
     mouse.x = event.clientX;
     mouse.y = event.clientY;
 });
 
-addEventListener('resize', function() {
+addEventListener('resize', function () {
     canvas.width = innerWidth;
     canvas.height = innerHeight;
 
     init();
 });
-
 
 // Utility Functions
 function randomIntFromRange(min, max) {
@@ -42,7 +36,6 @@ function randomIntFromRange(min, max) {
 function randomColor(colors) {
     return colors[Math.floor(Math.random() * colors.length)];
 }
-
 
 // Objects
 function Particle(x, y, dx, dy, radius, color) {
@@ -58,7 +51,7 @@ function Particle(x, y, dx, dy, radius, color) {
     this.g = 10;
     this.b = randomIntFromRange(150, 250);
 
-    this.update = function() {
+    this.update = function () {
         if (this.y + this.radius + this.dy > canvas.height) {
             this.dy = -this.dy;
         }
@@ -71,17 +64,16 @@ function Particle(x, y, dx, dy, radius, color) {
         this.y += Math.random() > 0.5 ? dy : -dy;
         this.draw();
 
-
         this.timeToLive -= 0.01;
     };
 
-    this.draw = function() {
+    this.draw = function () {
         this.opacity = this.timeToLive / 1;
 
         c.save();
         c.beginPath();
         c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
-        c.fillStyle = 'rgba('+this.r+','+this.g+','+this.b+',' + this.opacity.toFixed(2) + ')';
+        c.fillStyle = 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + this.opacity.toFixed(2) + ')';
         c.fill();
 
         c.closePath();
@@ -91,6 +83,8 @@ function Particle(x, y, dx, dy, radius, color) {
 }
 
 function Mortar(x, y, dx, dy, radius, color) {
+    var _this = this;
+
     this.x = x;
     this.y = y;
     this.dx = dx;
@@ -101,20 +95,20 @@ function Mortar(x, y, dx, dy, radius, color) {
     this.explosion;
     this.waveOffset = randomIntFromRange(1, 2);
 
-    this.update = delta => {
-        this.draw();
-        this.ttl -= 1;
+    this.update = function (delta) {
+        _this.draw();
+        _this.ttl -= 1;
 
-        this.dy += 0.11;
-        this.x += this.dx * Math.sin(delta) * this.waveOffset;
-        this.y += this.dy;
+        _this.dy += 0.11;
+        _this.x += _this.dx * Math.sin(delta) * _this.waveOffset;
+        _this.y += _this.dy;
 
-        if (this.dy > 0) {
-            this.triggered = true;
+        if (_this.dy > 0) {
+            _this.triggered = true;
         }
     };
 
-    this.draw = function() {
+    this.draw = function () {
         c.beginPath();
         c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
         c.fillStyle = this.color;
@@ -122,7 +116,7 @@ function Mortar(x, y, dx, dy, radius, color) {
         c.closePath();
     };
 
-    this.explode = function(callback) {
+    this.explode = function (callback) {
         // Create explosion... if particle count == 0, call callback
         if (typeof this.explosion == 'undefined') {
             this.explosion = new Explosion(this);
@@ -141,9 +135,9 @@ function Explosion(source) {
     this.rings = [];
     this.source = source;
 
-    this.init = function() {
+    this.init = function () {
         for (var i = 0; i < 12; i++) {
-            const v = 7;
+            var v = 7;
             var dx = v;
             var dy = v;
 
@@ -155,7 +149,7 @@ function Explosion(source) {
 
     this.init();
 
-    this.update = function() {
+    this.update = function () {
         for (var i = 0; i < this.particles.length; i++) {
             this.particles[i].update();
 
@@ -168,32 +162,35 @@ function Explosion(source) {
 }
 
 // Implementation
-let mortars = [];
+var mortars = [];
 
-function init() {
-}
+function init() {}
 
 // Animation Loop
-let elapsed = 0;
-let randomInterval = randomIntFromRange(80, 170);
+var elapsed = 0;
+var randomInterval = randomIntFromRange(80, 170);
 function animate() {
     requestAnimationFrame(animate);
     c.fillStyle = 'rgba(0,0,0, 0.02)';
     c.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let i = 0; i < mortars.length; i++) {
+    var _loop = function _loop(i) {
         mortars[i].update(elapsed);
 
         if (mortars[i].triggered === true) {
-            mortars[i].explode(() => {
+            mortars[i].explode(function () {
                 mortars.splice(i, 1);
             });
         }
+    };
+
+    for (var i = 0; i < mortars.length; i++) {
+        _loop(i);
     }
 
     if (elapsed % randomInterval == 0) {
-        const x = randomIntFromRange(10, canvas.width - 10);
-        const dy = randomIntFromRange(-5, -10);
+        var x = randomIntFromRange(10, canvas.width - 10);
+        var dy = randomIntFromRange(-5, -10);
         mortars.push(new Mortar(x, canvas.height, 2, dy, 3, 'blue'));
         randomInterval = randomIntFromRange(50, 100);
     }
@@ -203,4 +200,3 @@ function animate() {
 
 init();
 animate();
-
